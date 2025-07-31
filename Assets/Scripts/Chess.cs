@@ -42,6 +42,8 @@ public class Chess : MonoBehaviour
     private Vector2 _mousePos;
 
     private Turn _currTurn = Turn.Black;
+    public bool isWin;
+    public Turn winner; // 赢家
 
     private void Start()
     {
@@ -74,6 +76,8 @@ public class Chess : MonoBehaviour
 
     private void Update()
     {
+        _mousePos = Vector2.zero;
+        
         if (Input.GetMouseButtonDown(0))
         {
             _mousePos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -106,10 +110,17 @@ public class Chess : MonoBehaviour
                     {
                         (GameObject chessPrefab, Turn nextTurn, State chessState) = 
                             _currTurn == Turn.Black ? (blackChess, Turn.White, State.Black) : (whiteChess, Turn.Black, State.White);
-                        _currTurn = nextTurn;
-                        cell.state = chessState;
                         GameObject chessObj = Instantiate(chessPrefab, transform, true);
-                        chessObj.transform.position = chessPosition;   
+                        chessObj.transform.position = chessPosition;
+                        cell.state = chessState;
+                        
+                        if (Win())
+                        {
+                            isWin = true;
+                            winner = _currTurn;
+                        }
+                        
+                        _currTurn = nextTurn;
                     }
                     goto outer;
                 }
@@ -117,5 +128,79 @@ public class Chess : MonoBehaviour
         }
         outer:;
         
+    }
+
+    // 获胜判断
+    private bool Win()
+    {
+        State currState = _currTurn == Turn.Black ? State.Black : State.White;
+        
+        for (int row = 0; row < ChessGrid.Length; row++)
+        {
+            for (int col = 0; col < ChessGrid[row].Length; col++)
+            {
+                if (Horizontal(row, col, currState) || Vertical(row, col, currState) ||
+                    RightSlash(row, col, currState) || LeftSlash(row, col, currState))
+                    return true;
+            }
+        }
+        
+        return false;
+    }
+
+    // 横向判断
+    private bool Horizontal(int i, int j, State currState)
+    {
+        if (j + 4 >= ChessGrid[i].Length)
+            return false;
+        
+        if (ChessGrid[i][j].state == currState && ChessGrid[i][j + 1].state == currState &&
+            ChessGrid[i][j + 2].state == currState && ChessGrid[i][j + 3].state == currState &&
+            ChessGrid[i][j + 4].state == currState)
+            return true;
+        
+        return false;
+    }
+    
+    // 纵向判断
+    private bool Vertical(int i, int j, State currState)
+    {
+        if (i + 4 >= ChessGrid.Length)
+            return false;
+
+        if (ChessGrid[i][j].state == currState && ChessGrid[i + 1][j].state == currState &&
+            ChessGrid[i + 2][j].state == currState && ChessGrid[i + 3][j].state == currState &&
+            ChessGrid[i + 4][j].state == currState)
+            return true;
+        
+        return false;
+    }
+    
+    // 右斜判断
+    private bool RightSlash(int i, int j, State currState)
+    {
+        if (i + 4 >= ChessGrid.Length || j + 4 >= ChessGrid[i + 4].Length)
+            return false;
+
+        if (ChessGrid[i][j].state == currState && ChessGrid[i + 1][j + 1].state == currState &&
+            ChessGrid[i + 2][j + 2].state == currState && ChessGrid[i + 3][j + 3].state == currState &&
+            ChessGrid[i + 4][j + 4].state == currState)
+            return true;
+        
+        return false;
+    }
+    
+    // 左斜判断
+    private bool LeftSlash(int i, int j, State currState)
+    {
+        if (i + 4 >= ChessGrid.Length || j - 4 < 0)
+            return false;
+
+        if (ChessGrid[i][j].state == currState && ChessGrid[i + 1][j - 1].state == currState &&
+            ChessGrid[i + 2][j - 2].state == currState && ChessGrid[i + 3][j - 3].state == currState &&
+            ChessGrid[i + 4][j - 4].state == currState)
+            return true;
+        
+        return false;
     }
 }

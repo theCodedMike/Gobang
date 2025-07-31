@@ -492,6 +492,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1288499416268222, guid: 8bfac4b50244c814c916622e7e7b926f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1536845265}
+    - targetCorrespondingSourceObject: {fileID: 1288499416268222, guid: 8bfac4b50244c814c916622e7e7b926f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1536845268}
   m_SourcePrefab: {fileID: 100100000, guid: 8bfac4b50244c814c916622e7e7b926f, type: 3}
 --- !u!1 &1536845264 stripped
 GameObject:
@@ -516,6 +519,22 @@ MonoBehaviour:
   bottomRight: {fileID: 231372540}
   blackChess: {fileID: 1901945106189600, guid: 8d7fad0eff62a0d4d8ae5fb5755a3525, type: 3}
   whiteChess: {fileID: 1834032030111120, guid: 9d81f1ebe2f3af6459417c0e72afd634, type: 3}
+  isWin: 0
+  winner: 0
+--- !u!114 &1536845268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536845264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 012614e45ae354b4faf5c13b644a3eb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blackWin: {fileID: 2800000, guid: f2eb7b75e93e92c4db141c69f41331b9, type: 3}
+  whiteWin: {fileID: 2800000, guid: e12145fa100e99d40937fe97cc581b7c, type: 3}
 --- !u!1 &2142003753
 GameObject:
   m_ObjectHideFlags: 0
