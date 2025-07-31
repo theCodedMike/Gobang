@@ -1,5 +1,21 @@
 using UnityEngine;
 
+public enum Turn
+{
+    Black, White
+}
+
+public enum State
+{
+    None, Black, White
+}
+
+public class ChessTile
+{
+    public Vector2 pos; // 位置
+    public State state; // 状态
+}
+
 public class Chess : MonoBehaviour
 {
     public Transform topLeft;
@@ -20,10 +36,12 @@ public class Chess : MonoBehaviour
     private float _borderRight;
     private float _borderBottom;
     private float _borderLeft;
-    private readonly Vector2[,] _chessPos = new Vector2[15, 15]; // 可以放置棋子的位置
+    private static readonly ChessTile[][] ChessGrid = new ChessTile[15][]; // 可以放置棋子的位置
 
     private Camera _mainCamera;
     private Vector2 _mousePos;
+
+    private Turn _currTurn = Turn.Black;
 
     private void Start()
     {
@@ -38,11 +56,16 @@ public class Chess : MonoBehaviour
         _borderBottom = _posBL.y  - _tileHeight / 2;
         _borderLeft = _posBL.x - _tileWidth / 2;
         
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < ChessGrid.Length; i++)
         {
-            for (int j = 0; j < 15; j++)
+            ChessGrid[i] = new ChessTile[15];
+            for (int j = 0; j < ChessGrid[i].Length; j++)
             {
-                _chessPos[i, j] = new Vector2(_posTL.x + _tileWidth * j, _posTL.y - _tileHeight * i);
+                ChessGrid[i][j] = new ChessTile
+                {
+                    pos = new Vector2(_posTL.x + _tileWidth * j, _posTL.y - _tileHeight * i),
+                    state = State.None
+                };
             }
         }
         
@@ -70,15 +93,24 @@ public class Chess : MonoBehaviour
             return;
         }
         
-        for (int i = 0; i < 15; i++)
+        foreach (var row in ChessGrid)
         {
-            for (int j = 0; j < 15; j++)
+            foreach (var cell in row)
             {
-                Vector2 chessPosition = _chessPos[i, j];
+                Vector2 chessPosition = cell.pos;
                 if (Mathf.Abs(chessPosition.y - _mousePos.y) < _tileHeight / 2 &&
                     Mathf.Abs(chessPosition.x - _mousePos.x) < _tileWidth / 2)
                 {
-                    Instantiate(blackChess, chessPosition, Quaternion.identity);
+                    // 如果这个位置已经存在棋子，则不能再放置
+                    if (cell.state == State.None)
+                    {
+                        (GameObject chessPrefab, Turn nextTurn, State chessState) = 
+                            _currTurn == Turn.Black ? (blackChess, Turn.White, State.Black) : (whiteChess, Turn.Black, State.White);
+                        _currTurn = nextTurn;
+                        cell.state = chessState;
+                        GameObject chessObj = Instantiate(chessPrefab, transform, true);
+                        chessObj.transform.position = chessPosition;   
+                    }
                     goto outer;
                 }
             }
