@@ -2,12 +2,15 @@ using UnityEngine;
 
 public enum Turn
 {
-    Black, White
+    Black,
+    White
 }
 
 public enum State
 {
-    None, Black, White
+    None,
+    Black,
+    White
 }
 
 public class ChessTile
@@ -25,12 +28,12 @@ public class Chess : MonoBehaviour
 
     public GameObject blackChess;
     public GameObject whiteChess;
-    
+
     private Vector2 _posTL; // 左上角坐标
     private Vector2 _posTR; // 右上角坐标
     private Vector2 _posBL; // 左下角坐标
     private Vector2 _posBR; // 右下角坐标
-    private float _tileWidth;  // 瓦片宽度
+    private float _tileWidth; // 瓦片宽度
     private float _tileHeight; // 瓦片高度
     private float _borderTop;
     private float _borderRight;
@@ -41,9 +44,11 @@ public class Chess : MonoBehaviour
 
     private Camera _mainCamera;
     private Vector2 _mousePos;
-
     private Turn _currTurn = Turn.Black;
+    
+    [HideInInspector]
     public bool isWin;
+    [HideInInspector]
     public Turn winner; // 赢家
 
     private void Start()
@@ -56,29 +61,36 @@ public class Chess : MonoBehaviour
         _tileHeight = (_posTR.y - _posBR.y) / 14;
         _borderTop = _posTR.y + _tileHeight / 2;
         _borderRight = _posTR.x + _tileWidth / 2;
-        _borderBottom = _posBL.y  - _tileHeight / 2;
+        _borderBottom = _posBL.y - _tileHeight / 2;
         _borderLeft = _posBL.x - _tileWidth / 2;
-        
+
+        InitChessGrid(true);
+
+        _mainCamera = Camera.main;
+    }
+
+    private void InitChessGrid(bool isFirst)
+    {
         for (int i = 0; i < ChessGrid.Length; i++)
         {
-            ChessGrid[i] = new ChessTile[BoardSize];
+            if (isFirst)
+                ChessGrid[i] = new ChessTile[BoardSize];
             for (int j = 0; j < ChessGrid[i].Length; j++)
             {
-                ChessGrid[i][j] = new ChessTile
+                if (isFirst)
                 {
-                    pos = new Vector2(_posTL.x + _tileWidth * j, _posTL.y - _tileHeight * i),
-                    state = State.None
-                };
+                    ChessGrid[i][j] = new ChessTile() { };
+                    ChessGrid[i][j].pos = new Vector2(_posTL.x + _tileWidth * j, _posTL.y - _tileHeight * i);
+                }
+                ChessGrid[i][j].state = State.None;
             }
         }
-        
-        _mainCamera = Camera.main;
     }
 
     private void Update()
     {
         _mousePos = Vector2.zero;
-        
+
         if (Input.GetMouseButtonDown(0))
         {
             _mousePos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -97,7 +109,7 @@ public class Chess : MonoBehaviour
             print("超出边界了...");
             return;
         }
-        
+
         for (int r = 0; r < ChessGrid.Length; r++)
         {
             for (int c = 0; c < ChessGrid[r].Length; c++)
@@ -110,41 +122,44 @@ public class Chess : MonoBehaviour
                     if (ChessGrid[r][c].state == State.None)
                     {
                         // 黑棋禁手判断
-                        if(_currTurn == Turn.Black && (Rule.IsConnectedForbidden(r, c) || Rule.IsNonConnectedForbidden(r, c)))
+                        if (_currTurn == Turn.Black &&
+                            (Rule.IsConnectedForbidden(r, c) || Rule.IsNonConnectedForbidden(r, c)))
                         {
                             isWin = true;
                             winner = Turn.White;
                             goto outer;
                         }
-                        
-                        (GameObject chessPrefab, Turn nextTurn, State chessState) = 
-                            _currTurn == Turn.Black ? (blackChess, Turn.White, State.Black) : (whiteChess, Turn.Black, State.White);
+
+                        (GameObject chessPrefab, Turn nextTurn, State chessState) =
+                            _currTurn == Turn.Black
+                                ? (blackChess, Turn.White, State.Black)
+                                : (whiteChess, Turn.Black, State.White);
                         GameObject chessObj = Instantiate(chessPrefab, transform, true);
                         chessObj.transform.position = chessPosition;
                         ChessGrid[r][c].state = chessState;
-                        
+
                         if (Win())
                         {
                             isWin = true;
                             winner = _currTurn;
                         }
-                        
+
                         _currTurn = nextTurn;
                     }
-                    
+
                     goto outer;
                 }
             }
         }
-        
-        outer:;
+
+        outer: ;
     }
 
     // 获胜判断
     private bool Win()
     {
         State currState = _currTurn == Turn.Black ? State.Black : State.White;
-        
+
         for (int row = 0; row < ChessGrid.Length; row++)
         {
             for (int col = 0; col < ChessGrid[row].Length; col++)
@@ -154,7 +169,7 @@ public class Chess : MonoBehaviour
                     return true;
             }
         }
-        
+
         return false;
     }
 
@@ -163,15 +178,15 @@ public class Chess : MonoBehaviour
     {
         if (j + 4 >= ChessGrid[i].Length)
             return false;
-        
+
         if (ChessGrid[i][j].state == currState && ChessGrid[i][j + 1].state == currState &&
             ChessGrid[i][j + 2].state == currState && ChessGrid[i][j + 3].state == currState &&
             ChessGrid[i][j + 4].state == currState)
             return true;
-        
+
         return false;
     }
-    
+
     // 纵向判断
     private bool Vertical(int i, int j, State currState)
     {
@@ -182,10 +197,10 @@ public class Chess : MonoBehaviour
             ChessGrid[i + 2][j].state == currState && ChessGrid[i + 3][j].state == currState &&
             ChessGrid[i + 4][j].state == currState)
             return true;
-        
+
         return false;
     }
-    
+
     // 右斜判断
     private bool RightSlash(int i, int j, State currState)
     {
@@ -196,10 +211,10 @@ public class Chess : MonoBehaviour
             ChessGrid[i + 2][j + 2].state == currState && ChessGrid[i + 3][j + 3].state == currState &&
             ChessGrid[i + 4][j + 4].state == currState)
             return true;
-        
+
         return false;
     }
-    
+
     // 左斜判断
     private bool LeftSlash(int i, int j, State currState)
     {
@@ -210,7 +225,25 @@ public class Chess : MonoBehaviour
             ChessGrid[i + 2][j - 2].state == currState && ChessGrid[i + 3][j - 3].state == currState &&
             ChessGrid[i + 4][j - 4].state == currState)
             return true;
-        
+
         return false;
+    }
+
+
+    // 重新开始
+    public void RestartGame()
+    {
+        // 销毁已有的棋子对象
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // 重置棋盘状态
+        InitChessGrid(false);
+
+        enabled = true;
+        _currTurn = Turn.Black;
+        isWin = false;
     }
 }
