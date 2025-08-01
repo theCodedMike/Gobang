@@ -36,7 +36,8 @@ public class Chess : MonoBehaviour
     private float _borderRight;
     private float _borderBottom;
     private float _borderLeft;
-    private static readonly ChessTile[][] ChessGrid = new ChessTile[15][]; // 可以放置棋子的位置
+    public const int BoardSize = 15;
+    public static readonly ChessTile[][] ChessGrid = new ChessTile[BoardSize][]; // 可以放置棋子的位置
 
     private Camera _mainCamera;
     private Vector2 _mousePos;
@@ -60,7 +61,7 @@ public class Chess : MonoBehaviour
         
         for (int i = 0; i < ChessGrid.Length; i++)
         {
-            ChessGrid[i] = new ChessTile[15];
+            ChessGrid[i] = new ChessTile[BoardSize];
             for (int j = 0; j < ChessGrid[i].Length; j++)
             {
                 ChessGrid[i][j] = new ChessTile
@@ -97,22 +98,30 @@ public class Chess : MonoBehaviour
             return;
         }
         
-        foreach (var row in ChessGrid)
+        for (int r = 0; r < ChessGrid.Length; r++)
         {
-            foreach (var cell in row)
+            for (int c = 0; c < ChessGrid[r].Length; c++)
             {
-                Vector2 chessPosition = cell.pos;
+                Vector2 chessPosition = ChessGrid[r][c].pos;
                 if (Mathf.Abs(chessPosition.y - _mousePos.y) < _tileHeight / 2 &&
                     Mathf.Abs(chessPosition.x - _mousePos.x) < _tileWidth / 2)
                 {
                     // 如果这个位置已经存在棋子，则不能再放置
-                    if (cell.state == State.None)
+                    if (ChessGrid[r][c].state == State.None)
                     {
+                        // 黑棋禁手判断
+                        if(_currTurn == Turn.Black && (Rule.IsConnectedForbidden(r, c) || Rule.IsNonConnectedForbidden(r, c)))
+                        {
+                            isWin = true;
+                            winner = Turn.White;
+                            goto outer;
+                        }
+                        
                         (GameObject chessPrefab, Turn nextTurn, State chessState) = 
                             _currTurn == Turn.Black ? (blackChess, Turn.White, State.Black) : (whiteChess, Turn.Black, State.White);
                         GameObject chessObj = Instantiate(chessPrefab, transform, true);
                         chessObj.transform.position = chessPosition;
-                        cell.state = chessState;
+                        ChessGrid[r][c].state = chessState;
                         
                         if (Win())
                         {
@@ -122,12 +131,13 @@ public class Chess : MonoBehaviour
                         
                         _currTurn = nextTurn;
                     }
+                    
                     goto outer;
                 }
             }
         }
-        outer:;
         
+        outer:;
     }
 
     // 获胜判断
